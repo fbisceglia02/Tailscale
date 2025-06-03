@@ -1,0 +1,5 @@
+Procedura.md
+output/
+configuration/.terraform
+terraform.tfstate
+terraform.tfstate.backup
