@@ -79,9 +79,8 @@ jobs:
       - name: Run post-apply inline script - Generate key
         working-directory: ./configuration
         run: |
-          pwd
           cd ..
-          pwd
+          chmod +x ./key-generate.sh
           ./key-generate.sh
 
       - name: Upload Keys
