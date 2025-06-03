@@ -17,7 +17,7 @@ provider "azurerm" {
   features {}
 }
 
-# RESOURCE GROUP
+# RESOURCE GROUP #
 resource "azurerm_resource_group" "main" {
   name     = "rg-ts-demo"
   location = "westeurope"
