@@ -83,6 +83,11 @@ jobs:
           mkdir output
           chmod +x ./key-generate.sh
           ./key-generate.sh
+          echo "pwd?"
+          pwd
+          echo "ls?"
+          ls
+          sleep 100
 
       - name: Upload Keys
         uses: actions/upload-artifact@v4
