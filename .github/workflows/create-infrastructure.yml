@@ -68,11 +68,25 @@ jobs:
         working-directory: ./configuration
         run: terraform apply -auto-approve ../tfplan
 
-      - name: Run post-apply inline script
+      - name: Run post-apply inline script - Login az cli
         working-directory: ./configuration
         run: |
           echo "Running post-apply tasks..."
           echo "Logging Az CLI into Azure..."
           az login --service-principal --username $ARM_CLIENT_ID --password $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
           az account set --subscription $ARM_SUBSCRIPTION_ID
+          
+      - name: Run post-apply inline script - Generate key
+        working-directory: ./configuration
+        run: |
+          pwd
+          cd ..
+          pwd
+          ./key-generate.sh
+
+      - name: Upload Keys
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-keys
+          path: output/
 
