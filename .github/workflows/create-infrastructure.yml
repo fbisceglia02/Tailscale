@@ -80,6 +80,7 @@ jobs:
         working-directory: ./configuration
         run: |
           cd ..
+          mkdir output
           chmod +x ./key-generate.sh
           ./key-generate.sh
 

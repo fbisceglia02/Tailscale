@@ -13,6 +13,7 @@ for vm in $vmList; do
     mkdir $vm
     ssh-keygen -t rsa -b 2048 -f "./$vm/key" -N ""
     az vm user update --resource-group $resourceGroup --name $vm --username $username --ssh-key-value "./$vm/key.pub"
+    mv $vm "output/$vm"
 done
 
 
