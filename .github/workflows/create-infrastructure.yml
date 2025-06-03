@@ -72,9 +72,7 @@ jobs:
         working-directory: ./configuration
         run: |
           echo "Running post-apply tasks..."
-          # Put your custom bash commands below
-          # For example:
-          echo "Deployment complete!"
-          # touch post_apply_marker.txt
-          # tailscale up ...
+          echo "Logging Az CLI into Azure..."
+          az login --service-principal --username $ARM_CLIENT_ID --password $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+          az account set --subscription $ARM_SUBSCRIPTION_ID
 
