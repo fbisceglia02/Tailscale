@@ -7,26 +7,74 @@ on:
     branches: [ main ]
 
 jobs:
-  terraform:
+  plan:
     runs-on: ubuntu-latest
-
     env:
-      # Export secrets as environment variables (add more as needed)
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      # Add your custom environment variables here
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-    - name: Terraform Init
-      run: terraform init
+      - name: Terraform Init
+        working-directory: ./configuration
+        run: terraform init
 
-    - name: Terraform Plan
-      run: terraform plan
+      - name: Terraform Validate
+        working-directory: ./configuration
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ./configuration
+        run: terraform plan -out=tfplan
+
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: tfplan
+
+  apply:
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: production   # Requires manual approval
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+
+      - name: Terraform Init
+        working-directory: ./configuration
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: ./configuration
+        run: terraform apply -auto-approve ../tfplan
+
+      - name: Run post-apply inline script
+        working-directory: ./configuration
+        run: |
+          echo "Running post-apply tasks..."
+          # Put your custom bash commands below
+          # For example:
+          echo "Deployment complete!"
+          # touch post_apply_marker.txt
+          # tailscale up ...
+
