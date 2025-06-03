@@ -1,4 +1,10 @@
 terraform {
+  backend "azurerm" {
+    resource_group_name   = "my-tfstate-rg"
+    storage_account_name  = "mytfstatestorageferrux"
+    container_name        = "tfstate"
+    key                   = "Tailscale/dev/terraform.tfstate"
+  }
   required_providers {
     azurerm = {
       source = "hashicorp/azurerm"
