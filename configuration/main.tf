@@ -113,6 +113,14 @@ resource "azurerm_public_ip" "vnet3_" {
   sku                 = "Standard"
 }
 
+resource "azurerm_public_ip" "vnet3_0" {
+  name                = "vnet3-pip-0"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
 
 # =========== VIRTUAL MACHINES ==============
 # Shared image for Ubuntu
@@ -355,6 +363,7 @@ resource "azurerm_network_interface" "vnet3_vmts_02_nic" {
     subnet_id                     = azurerm_subnet.vnet3_subnet2.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.1.20"
+    public_ip_address_id          = azurerm_public_ip.vnet3_0.id
   }
 }
 
@@ -435,6 +444,8 @@ resource "azurerm_network_interface_security_group_association" "vm-ts-06" {
 
 
 
+
+
 # ========= OUTPUTS (Optional, for connection info) =========
 
 
@@ -469,3 +480,6 @@ output "vnet1_vnet3_public_ip" {
   value = azurerm_public_ip.vnet3_.ip_address
 }
 
+output "vnet1_vnet3_public_ip_0" {
+  value = azurerm_public_ip.vnet3_0.ip_address
+}
