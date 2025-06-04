@@ -3,3 +3,7 @@ output/
 configuration/.terraform
 terraform.tfstate
 terraform.tfstate.backup
+proc.txt
+proc0.txt
+*.pptx
+*.log

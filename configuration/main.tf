@@ -66,6 +66,27 @@ resource "azurerm_subnet" "vnet2_subnet2" {
   virtual_network_name = azurerm_virtual_network.vnet2.name
   address_prefixes     = ["10.0.1.0/24"]
 }
+# vnet3
+resource "azurerm_virtual_network" "vnet3" {
+  name                = "vnet3"
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+}
+
+resource "azurerm_subnet" "vnet3_subnet1" {
+  name                 = "vnet3-subnet1"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.vnet3.name
+  address_prefixes     = ["10.0.0.0/24"]
+}
+
+resource "azurerm_subnet" "vnet3_subnet2" {
+  name                 = "vnet3-subnet2"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.vnet3.name
+  address_prefixes     = ["10.0.1.0/24"]
+}
 
 # =========== PUBLIC IP ==============
 resource "azurerm_public_ip" "vnet1_" {
@@ -78,6 +99,14 @@ resource "azurerm_public_ip" "vnet1_" {
 
 resource "azurerm_public_ip" "vnet2_" {
   name                = "vnet2-pip"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+resource "azurerm_public_ip" "vnet3_" {
+  name                = "vnet3-pip"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   allocation_method   = "Static"
@@ -270,6 +299,90 @@ resource "azurerm_linux_virtual_machine" "vnet2_vmts_02" {
   }
 }
 
+# vnet3 - vm-ts-05 (Vnet 2, Subnet 1, Static IP - public ip)
+
+
+
+resource "azurerm_network_interface" "vnet3_vmts_p1_nic" {
+  name                = "nic-vm-ts-05"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.vnet3_subnet1.id
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.0.0.4"
+    public_ip_address_id          = azurerm_public_ip.vnet3_.id
+  }
+}
+
+# resource "azurerm_public_ip" "vnet3_" {
+
+resource "azurerm_linux_virtual_machine" "vnet3_vmts_p1" {
+  name                = "vm-ts-05"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  size                = "Standard_B1s"
+  admin_username      = "azureuser"
+  network_interface_ids = [azurerm_network_interface.vnet3_vmts_p1_nic.id]
+
+  admin_password = "ChangeMe123!"  # Replace for production
+  disable_password_authentication = false
+
+  source_image_reference {
+    publisher = var.ubuntu_image.publisher
+    offer     = var.ubuntu_image.offer
+    sku       = var.ubuntu_image.sku
+    version   = var.ubuntu_image.version
+  }
+
+  os_disk {
+    name              = "disk-vm-ts-05"
+    caching           = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+}
+
+# vnet3 - VM-TS-06 (Subnet 2, Static IP)
+resource "azurerm_network_interface" "vnet3_vmts_02_nic" {
+  name                = "nic-vm-ts-06"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.vnet3_subnet2.id
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.0.1.20"
+  }
+}
+
+resource "azurerm_linux_virtual_machine" "vnet3_vmts_02" {
+  name                = "vm-ts-06"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  size                = "Standard_B1s"
+  admin_username      = "azureuser"
+  network_interface_ids = [azurerm_network_interface.vnet3_vmts_02_nic.id]
+
+  admin_password = "ChangeMe123!"  # Replace for production
+  disable_password_authentication = false
+
+  source_image_reference {
+    publisher = var.ubuntu_image.publisher
+    offer     = var.ubuntu_image.offer
+    sku       = var.ubuntu_image.sku
+    version   = var.ubuntu_image.version
+  }
+
+  os_disk {
+    name              = "disk-vm-ts-06"
+    caching           = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+}
+
 
 # NSG
 resource "azurerm_network_security_group" "ssh" {
@@ -311,6 +424,14 @@ resource "azurerm_network_interface_security_group_association" "vm-ts-03" {
   network_interface_id      = azurerm_network_interface.vnet1_vmts_p3_nic.id
   network_security_group_id = azurerm_network_security_group.ssh.id
 }
+resource "azurerm_network_interface_security_group_association" "vm-ts-05" {
+  network_interface_id      = azurerm_network_interface.vnet3_vmts_p1_nic.id
+  network_security_group_id = azurerm_network_security_group.ssh.id
+}
+resource "azurerm_network_interface_security_group_association" "vm-ts-06" {
+  network_interface_id      = azurerm_network_interface.vnet3_vmts_02_nic.id
+  network_security_group_id = azurerm_network_security_group.ssh.id
+}
 
 
 
@@ -342,5 +463,9 @@ output "vnet1_vnet1_public_ip" {
 
 output "vnet1_vnet2_public_ip" {
   value = azurerm_public_ip.vnet2_.ip_address
+}
+
+output "vnet1_vnet3_public_ip" {
+  value = azurerm_public_ip.vnet3_.ip_address
 }
 
